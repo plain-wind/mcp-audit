@@ -4,11 +4,13 @@ import { generateLock } from '../generateLock/index.js';
 import { audit } from '../audit/index.js';
 import { render } from '../render/index.js';
 import fs from 'node:fs';
+import { dirname } from 'node:path';
 
 /**
  * 根据项目根目录，审计项目中所有的包（含项目本身）
  * @param {string} projectRoot 项目根目录，可以是本地目录的绝对路径，也可以是远程仓库的URL
- * @param {string} savePath 保存审计结果的文件名，审计结果是一个标准格式的markdown字符串
+ * @param {string} [savePath] 可选。审计结果另存为文件的路径，父目录不存在时会自动创建
+ * @returns {Promise<string>} 标准格式的 markdown 审计报告
  */
 export async function auditPackage(projectRoot, savePath) {
   // 工作目录必须在 finally 中清理：任何一步失败（解析、install、audit、写报告）都不留垃圾
@@ -40,8 +42,13 @@ export async function auditPackage(projectRoot, savePath) {
 
     // 4. 渲染审计结果
     const renderedResult = await render(auditResult, packageJson);
-    // 5. 将结果保存到指定路径
-    await fs.promises.writeFile(savePath, renderedResult);
+
+    // 5. 按需落盘，并把报告返回给调用方
+    if (savePath) {
+      await fs.promises.mkdir(dirname(savePath), { recursive: true });
+      await fs.promises.writeFile(savePath, renderedResult, 'utf8');
+    }
+    return renderedResult;
   } finally {
     await deleteWorkDir(workDir);
   }
