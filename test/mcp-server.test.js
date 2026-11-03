@@ -24,6 +24,7 @@ test('对外暴露 auditPackage，且 savePath 是可选参数', async () => {
     assert.ok(tool, '应注册 auditPackage 工具');
     assert.deepEqual(tool.inputSchema.required, ['projectRoot']);
     assert.match(tool.description, /markdown/, '描述应说明返回 markdown 报告');
+    assert.equal(client.getServerVersion().version, '1.0.0');
   } finally {
     await client.close();
     await server.close();

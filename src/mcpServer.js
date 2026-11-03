@@ -1,8 +1,14 @@
+#!/usr/bin/env node
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { auditPackage } from './entry/index.js';
+
+const { version } = JSON.parse(
+  readFileSync(new URL('../package.json', import.meta.url), 'utf8')
+);
 
 /**
  * 创建 MCP 服务实例（不建立连接），便于在测试中通过内存传输协议驱动。
@@ -11,7 +17,7 @@ export function createMcpServer() {
   const server = new McpServer({
     name: 'audit-server',
     title: '前端工程安全审计服务',
-    version: '0.1.0',
+    version,
   });
 
   server.registerTool(

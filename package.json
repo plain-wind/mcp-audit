@@ -1,15 +1,32 @@
 {
   "name": "mcp-audit",
   "version": "1.0.0",
-  "description": "",
-  "main": "entry/index.js",
+  "description": "MCP 服务：审计前端工程的直接与间接依赖漏洞，返回 markdown 报告",
+  "main": "src/entry/index.js",
   "type": "module",
+  "bin": {
+    "mcp-audit": "src/mcpServer.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
   "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=20.11"
+  },
   "scripts": {
+    "start": "node src/mcpServer.js",
     "test": "node --test 'test/**/*.test.js'",
     "test:update-snapshots": "UPDATE_SNAPSHOTS=1 node --test 'test/**/*.test.js'"
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "security",
+    "audit",
+    "npm",
+    "vulnerability"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
