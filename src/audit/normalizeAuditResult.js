@@ -1,7 +1,7 @@
 import { getDepChains } from './getDepChain.js';
 import { assertAuditReport, getSeverityBucket } from './assertAuditReport.js';
 
-function _normalizeVulnerabilities(auditResult) {
+function _normalizeVulnerabilities(auditResult, lockGraph) {
   const result = {
     critical: [],
     high: [],
@@ -36,14 +36,22 @@ function _normalizeVulnerabilities(auditResult) {
       problems: validVia,
       nodes: packageInfo.nodes || [],
     };
-    info.depChains = getDepChains(packageInfo, auditResult.vulnerabilities);
+
+    // 优先用 lockfile 构建的依赖图：安装路径唯一，能区分同名不同版本；
+    // 没有可用 lockfile（如 v1 lock）时退回 npm audit 的 effects 名称图
+    const lockChains = lockGraph
+      ? lockGraph.chainsTo(packageInfo.nodes || [])
+      : [];
+    info.depChains = lockChains.length
+      ? lockChains
+      : getDepChains(packageInfo, auditResult.vulnerabilities);
     return info;
   }
 }
 
-export function normalizeAuditResult(auditResult) {
+export function normalizeAuditResult(auditResult, { lockGraph } = {}) {
   assertAuditReport(auditResult);
   return {
-    vulnerabilities: _normalizeVulnerabilities(auditResult),
+    vulnerabilities: _normalizeVulnerabilities(auditResult, lockGraph),
   };
 }

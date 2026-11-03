@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeAuditResult } from '../src/audit/normalizeAuditResult.js';
+import { buildLockGraph } from '../src/audit/lockGraph.js';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 
@@ -75,5 +76,31 @@ test('未知严重级别会明确报错，而不是 TypeError 崩溃', () => {
       }),
     /未知的漏洞等级/
   );
+});
+
+test('有 lockfile 依赖图时优先使用它给出的依赖链', () => {
+  const lockGraph = buildLockGraph({
+    '': { name: 'demo', dependencies: { a: '1.0.0' } },
+    'node_modules/a': { name: 'a', version: '1.0.0', dependencies: { x: '3.0.0' } },
+    'node_modules/a/node_modules/x': { name: 'x', version: '3.0.0' },
+    'node_modules/x': { name: 'x', version: '2.0.0' },
+  });
+
+  const { vulnerabilities } = normalizeAuditResult(
+    {
+      vulnerabilities: {
+        x: {
+          name: 'x',
+          severity: 'high',
+          via: [{ title: 't' }],
+          nodes: ['node_modules/a/node_modules/x'],
+          effects: [],
+        },
+      },
+    },
+    { lockGraph }
+  );
+
+  assert.deepEqual(vulnerabilities.high[0].depChains, [['a', 'x']]);
 });
 
