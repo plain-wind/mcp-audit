@@ -1,5 +1,7 @@
 # mcp-audit
 
+[![CI](https://github.com/plain-wind/mcp-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/plain-wind/mcp-audit/actions/workflows/ci.yml)
+
 基于 [MCP](https://modelcontextprotocol.io) 的前端工程依赖安全审计服务。一次工具调用即可完成：解析工程 → 复用/生成 lockfile → `npm audit` → 规范化 → 输出 markdown 报告。
 
 - 审计本地工程（绝对路径）或 GitHub 仓库 URL
