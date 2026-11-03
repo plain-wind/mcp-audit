@@ -1,4 +1,5 @@
 import { getDepChains } from './getDepChain.js';
+import { assertAuditReport, getSeverityBucket } from './assertAuditReport.js';
 
 function _normalizeVulnerabilities(auditResult) {
   const result = {
@@ -7,17 +8,24 @@ function _normalizeVulnerabilities(auditResult) {
     moderate: [],
     low: [],
   };
+
   for (const key in auditResult.vulnerabilities) {
     const packageInfo = auditResult.vulnerabilities[key];
     const normalizedPackage = _normalizePackage(packageInfo);
     if (normalizedPackage) {
-      result[normalizedPackage.severity].push(normalizedPackage);
+      getSeverityBucket(
+        result,
+        normalizedPackage.severity,
+        normalizedPackage.name
+      ).push(normalizedPackage);
     }
   }
   return result;
 
   function _normalizePackage(packageInfo) {
     const { via = [] } = packageInfo;
+    // via 中的字符串表示"经由某个脆弱依赖间接受影响"，不是该包自身的漏洞，
+    // 只保留对象形式的 advisory，避免同一漏洞被重复统计
     const validVia = via.filter((it) => typeof it === 'object');
     if (validVia.length === 0) {
       return null;
@@ -29,18 +37,12 @@ function _normalizeVulnerabilities(auditResult) {
       nodes: packageInfo.nodes || [],
     };
     info.depChains = getDepChains(packageInfo, auditResult.vulnerabilities);
-    // info.depChains = info.depChains.filter(
-    //   (chain) => !isInvalidChain(chain, packageInfo.name)
-    // );
     return info;
   }
 }
 
-function isInvalidChain(chain, packageName) {
-  return chain.length === 0 || (chain.length === 1 && chain[0] === packageName);
-}
-
 export function normalizeAuditResult(auditResult) {
+  assertAuditReport(auditResult);
   return {
     vulnerabilities: _normalizeVulnerabilities(auditResult),
   };

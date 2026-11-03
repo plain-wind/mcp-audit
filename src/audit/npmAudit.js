@@ -1,4 +1,5 @@
 import { runCommandResult } from '../common/utils.js';
+import { assertAuditReport } from './assertAuditReport.js';
 
 /**
  * 在指定目录执行 npm audit，返回解析后的 JSON。
@@ -22,11 +23,17 @@ export async function npmAudit(workDir, { timeout } = {}) {
     );
   }
 
+  let report;
   try {
-    return JSON.parse(stdout);
+    report = JSON.parse(stdout);
   } catch {
     throw new Error(
       `npm audit 的输出不是合法 JSON（exit code ${code}）：\n${stdout.slice(0, 500)}`
     );
   }
+
+  // 无论是 error 对象还是缺少 vulnerabilities，都在这里立刻失败，
+  // 绝不把失败结果继续传给下游渲染成"没有漏洞"
+  assertAuditReport(report);
+  return report;
 }

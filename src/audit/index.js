@@ -1,6 +1,7 @@
 import { npmAudit } from './npmAudit.js';
 import { normalizeAuditResult } from './normalizeAuditResult.js';
 import { currentAudit } from './currentAudit.js';
+import { getSeverityBucket } from './assertAuditReport.js';
 
 export async function audit(workDir, packageJson) {
   // 调用 npmAudit 获取审计结果
@@ -11,7 +12,11 @@ export async function audit(workDir, packageJson) {
   // 添加当前工程的审计结果
   const current = await currentAudit(packageJson.name, packageJson.version);
   if (current) {
-    normalizedResult.vulnerabilities[current.severity].unshift(current);
+    getSeverityBucket(
+      normalizedResult.vulnerabilities,
+      current.severity,
+      current.name
+    ).unshift(current);
   }
   // 添加汇总信息
   normalizedResult.summary = {

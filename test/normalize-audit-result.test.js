@@ -53,3 +53,27 @@ test('每条依赖链都以漏洞包自身结尾', async () => {
     }
   }
 });
+
+test('npm audit 的失败结果不会被规范化成"零漏洞"', () => {
+  assert.throws(
+    () => normalizeAuditResult({ error: { code: 'ENOLOCK', summary: 'requires a lockfile' } }),
+    /ENOLOCK/
+  );
+});
+
+test('缺少 vulnerabilities 字段时抛错', () => {
+  assert.throws(() => normalizeAuditResult({}), /vulnerabilities/);
+});
+
+test('未知严重级别会明确报错，而不是 TypeError 崩溃', () => {
+  assert.throws(
+    () =>
+      normalizeAuditResult({
+        vulnerabilities: {
+          a: { name: 'a', severity: 'info', via: [{ title: 't' }], nodes: [] },
+        },
+      }),
+    /未知的漏洞等级/
+  );
+});
+
