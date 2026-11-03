@@ -104,3 +104,16 @@ test('有 lockfile 依赖图时优先使用它给出的依赖链', () => {
   assert.deepEqual(vulnerabilities.high[0].depChains, [['a', 'x']]);
 });
 
+
+test('保留 isDirect 与 fixAvailable，供报告给出修复建议', async () => {
+  const { vulnerabilities } = await loadNormalized();
+  const packages = Object.values(vulnerabilities).flat();
+
+  for (const pkg of packages) {
+    assert.equal(typeof pkg.isDirect, 'boolean');
+  }
+  assert.ok(
+    packages.some((pkg) => pkg.fixAvailable),
+    'fixture 中应至少有一个包带有修复建议'
+  );
+});

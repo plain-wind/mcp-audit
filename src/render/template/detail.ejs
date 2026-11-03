@@ -1,7 +1,5 @@
-## <%-desc.severityLevels[type] %>漏洞
+## <%- desc.severityLevels[type] %>漏洞（<%- audit.summary[type] %> 个依赖包）
 
-共计 **<%- audit.summary[type] %>** 个
-
-<% audit.vulnerabilities[type].forEach(function(item){ %>
-<%- include('./detail-item.ejs', {item: item}) %>
-<% }); %>
+<% audit.vulnerabilities[type].forEach((item) => { -%>
+<%- include('./detail-item.ejs', { item }) -%>
+<% }); -%>

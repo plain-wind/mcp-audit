@@ -44,7 +44,9 @@ export async function auditPackage(projectRoot, savePath) {
     auditResult.lockSource = lock.source;
 
     // 4. 渲染审计结果
-    const renderedResult = await render(auditResult, packageJson);
+    const renderedResult = await render(auditResult, packageJson, {
+      projectRoot: isRemoteProject(projectRoot) ? null : projectRoot,
+    });
 
     // 5. 按需落盘，并把报告返回给调用方
     if (savePath) {

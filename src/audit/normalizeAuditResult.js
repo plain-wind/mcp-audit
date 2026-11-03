@@ -35,6 +35,9 @@ function _normalizeVulnerabilities(auditResult, lockGraph) {
       severity: packageInfo.severity,
       problems: validVia,
       nodes: packageInfo.nodes || [],
+      isDirect: Boolean(packageInfo.isDirect),
+      // npm audit 会给出可修复的目标版本，报告里要展示这一信息
+      fixAvailable: packageInfo.fixAvailable ?? null,
     };
 
     // 优先用 lockfile 构建的依赖图：安装路径唯一，能区分同名不同版本；

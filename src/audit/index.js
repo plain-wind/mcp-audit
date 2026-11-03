@@ -30,12 +30,11 @@ export async function audit(workDir, packageJson) {
     ).unshift(current);
   }
 
-  // 添加汇总信息
+  // 添加汇总信息：区分"受影响的依赖包"和"漏洞条目"
+  const allPackages = Object.values(normalizedResult.vulnerabilities).flat();
   normalizedResult.summary = {
-    total: Object.values(normalizedResult.vulnerabilities).reduce(
-      (sum, arr) => sum + arr.length,
-      0
-    ),
+    total: allPackages.length,
+    advisories: allPackages.reduce((sum, item) => sum + item.problems.length, 0),
     critical: normalizedResult.vulnerabilities.critical.length,
     high: normalizedResult.vulnerabilities.high.length,
     moderate: normalizedResult.vulnerabilities.moderate.length,

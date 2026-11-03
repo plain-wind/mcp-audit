@@ -1,8 +1,15 @@
-# `<%- packageJson.name %>`审计结果
+# <%- code(packageJson.name) %> 安全审计报告
 
-<% if(audit.summary.total) { %>
-<%- include('./audit.ejs'); %>
-<% } %>
-<% if(audit.summary.total === 0) { %>
-你项目的所有直接依赖和间接依赖都没有发现任何风险漏洞。
-<% } %>
+<% if (audit.summary.total) { -%>
+<%- include('./audit.ejs') -%>
+<% } else { -%>
+本次审计未发现任何已知漏洞。
+
+<% } -%>
+<% if (audit.warnings && audit.warnings.length) { -%>
+## 审计说明
+
+<% audit.warnings.forEach((warning) => { -%>
+- <%- plainText(warning) %>
+<% }); -%>
+<% } -%>

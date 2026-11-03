@@ -1,32 +1,38 @@
-### `<%- item.name -%>`
+### <%- code(item.name) %><% if (item.isDirect) { %>（直接依赖）<% } %>
 
-**漏洞描述**：
-<% item.problems.forEach((problem) => { %>
-- <%- problem.title %>
-  - npm漏洞编号：`<%- problem.source %>`
-  - 漏洞详细说明：<%- problem.url %>
+- 漏洞等级：**<%- desc.severityLevels[item.severity] %>**
+- 修复建议：<%- fixSuggestion(item.fixAvailable) %>
+
+**漏洞描述**
+
+<% item.problems.forEach((problem) => { -%>
+- <%- plainText(problem.title) %>
+  - 漏洞编号：<%- code(problem.source) %>
+  - 详细说明：<%- autolink(problem.url) %>
   - 漏洞等级：<%- desc.severityLevels[problem.severity] %>
-  - 受影响的版本：`<%- problem.range %>`
-<% }); %>
+  - 受影响的版本：<%- code(problem.range) %>
+<% }); -%>
 
-**依赖关系**：
-<% if(item.depChains.length === 0) { %>
-<% if(item.name === packageJson.name) { %>
-当前工程
-<% } else { %>
-- `<%- packageJson.name %>` / <%- item.name %>
-<% } %>
-<% } else { %>
-<% item.depChains.forEach((chain) => { %>
-<% if(chain.length === 1 && chain[0] === packageJson.name) { %>
-当前工程
-<% } else { %>
-- `<%- packageJson.name %>` / <%- chain.map(c=>`\`${c}\``).join(' / ') %>
-<% } %>
-  <% }); %>
-  <% } %>
+**依赖关系**
 
-**漏洞包所在目录**：
-<% item.nodes.forEach((path) => { %>
-- `<%- path %>`
-<% }); %>
+<% if (item.depChains.length === 0) { -%>
+<% if (item.name === packageJson.name) { -%>
+- 当前工程
+<% } else { -%>
+- <%- code(packageJson.name) %> / <%- code(item.name) %>
+<% } -%>
+<% } else { -%>
+<% item.depChains.forEach((chain) => { -%>
+<% if (chain.length === 1 && chain[0] === packageJson.name) { -%>
+- 当前工程
+<% } else { -%>
+- <%- code(packageJson.name) %> / <%- chain.map((name) => code(name)).join(' / ') %>
+<% } -%>
+<% }); -%>
+<% } -%>
+
+**漏洞包所在目录**
+
+<% item.nodes.forEach((node) => { -%>
+- <%- code(formatPath(node)) %>
+<% }); -%>
