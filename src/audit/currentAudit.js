@@ -1,34 +1,36 @@
 import { remoteAudit } from './remoteAudit.js';
-const severityLevelsMap = {
-  info: 0,
-  low: 1,
-  moderate: 2,
-  high: 3,
-  critical: 4,
-};
 
-// 添加当前工程的审计结果
-export async function currentAudit(name, version) {
-  // 1. 调用 remoteAudit 函数获取审计结果
-  const auditResult = await remoteAudit(name, version);
+const SEVERITY_LEVELS = ['low', 'moderate', 'high', 'critical'];
 
-  // 2. 规格化审计结果
-  if (
-    !auditResult.advisories ||
-    Object.keys(auditResult.advisories).length === 0
-  ) {
-    return null;
-  }
+/**
+ * 查询工程自身（npm 上已发布版本）的漏洞。
+ * 没有 name/version（如 workspace 根包）或没有发布版本时返回 null。
+ *
+ * @param {string} name
+ * @param {string} version
+ * @param {{endpoint?: string, timeout?: number}} [options]
+ * @returns {Promise<Object|null>}
+ */
+export async function currentAudit(name, version, options) {
+  if (!name || !version) return null;
+
+  const auditResult = await remoteAudit(name, version, options);
+  const advisories = Object.values(auditResult?.advisories || {}).filter(
+    (advisory) => SEVERITY_LEVELS.includes(advisory.severity)
+  );
+  if (advisories.length === 0) return null;
+
   const result = {
     name,
     range: version,
     nodes: ['.'],
     depChains: [],
+    problems: [],
   };
-  const advisories = Object.values(auditResult.advisories);
-  let maxSeverity = 'info';
-  result.problems = advisories.map((advisory) => {
-    const problem = {
+
+  let maxSeverity = 'low';
+  for (const advisory of advisories) {
+    result.problems.push({
       source: advisory.id,
       name,
       dependency: name,
@@ -38,13 +40,16 @@ export async function currentAudit(name, version) {
       cwe: advisory.cwe,
       cvss: advisory.cvss,
       range: advisory.vulnerable_versions,
-    };
-    // 更新最大严重性
-    if (severityLevelsMap[problem.severity] > severityLevelsMap[maxSeverity]) {
-      maxSeverity = problem.severity;
+    });
+
+    if (
+      SEVERITY_LEVELS.indexOf(advisory.severity) >
+      SEVERITY_LEVELS.indexOf(maxSeverity)
+    ) {
+      maxSeverity = advisory.severity;
     }
-    return problem;
-  });
+  }
+
   result.severity = maxSeverity;
   return result;
 }

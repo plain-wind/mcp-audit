@@ -37,6 +37,9 @@ export async function auditPackage(projectRoot, savePath) {
       );
       lock = await generateLock(workDir, packageJson);
       auditResult = await audit(workDir, packageJson);
+      auditResult.warnings.push(
+        '项目自带 lockfile 无法用于审计，已改为按 package.json 重新解析依赖，结果可能与实际安装版本不完全一致'
+      );
     }
     auditResult.lockSource = lock.source;
 

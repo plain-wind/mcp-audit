@@ -5,6 +5,8 @@ import { getSeverityBucket } from './assertAuditReport.js';
 import { readLockGraph } from './lockGraph.js';
 
 export async function audit(workDir, packageJson) {
+  const warnings = [];
+
   // 调用 npmAudit 获取审计结果
   const auditResult = await npmAudit(workDir);
   // 用工作目录里的 lockfile 构建依赖图，得到准确的多版本依赖链
@@ -12,8 +14,14 @@ export async function audit(workDir, packageJson) {
   // 规范化审计结果
   const normalizedResult = normalizeAuditResult(auditResult, { lockGraph });
 
-  // 添加当前工程的审计结果
-  const current = await currentAudit(packageJson.name, packageJson.version);
+  // 补充工程自身的漏洞：npm audit 不覆盖工程自己
+  let current = null;
+  try {
+    current = await currentAudit(packageJson.name, packageJson.version);
+  } catch (err) {
+    // 工程自身的漏洞信息是增量信息，接口不可用时不应让整份报告失败
+    warnings.push(`无法获取工程自身发布版本的漏洞信息：${err.message}`);
+  }
   if (current) {
     getSeverityBucket(
       normalizedResult.vulnerabilities,
@@ -21,6 +29,7 @@ export async function audit(workDir, packageJson) {
       current.name
     ).unshift(current);
   }
+
   // 添加汇总信息
   normalizedResult.summary = {
     total: Object.values(normalizedResult.vulnerabilities).reduce(
@@ -32,5 +41,6 @@ export async function audit(workDir, packageJson) {
     moderate: normalizedResult.vulnerabilities.moderate.length,
     low: normalizedResult.vulnerabilities.low.length,
   };
+  normalizedResult.warnings = warnings;
   return normalizedResult;
 }
