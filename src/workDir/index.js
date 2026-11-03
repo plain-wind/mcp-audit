@@ -1,21 +1,26 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import os from 'node:os';
+import { join } from 'node:path';
 
-import { join } from 'path';
-import { uniqueId, getDirname } from '../common/utils.js';
+const WORK_PREFIX = 'mcp-audit-';
 
-const __dirname = getDirname(import.meta.url); // 获取当前文件的目录名
-
-const basePath = join(__dirname, '../..'); // 获取上两级目录
-const workBasePath = join(basePath, 'work'); // 定义工作目录路径
-fs.mkdirSync(workBasePath, { recursive: true }); // 确保工作目录存在
-
+/**
+ * 在系统临时目录下创建本次审计的工作目录。
+ * 不用包内目录：避免污染安装位置、避免被打进 npm 包、避免只读文件系统报错。
+ */
 export async function createWorkDir() {
-  const workDir = join(workBasePath, uniqueId());
-  await fs.promises.mkdir(workDir, { recursive: true }); // 创建工作目录
-  return workDir;
+  // 每次调用时读取 os.tmpdir()，便于测试通过 TMPDIR 隔离
+  return fs.promises.mkdtemp(join(os.tmpdir(), WORK_PREFIX));
 }
 
-// 删除工作目录
+/**
+ * 删除工作目录。目录已不存在时静默返回，便于放在 finally 中调用。
+ */
 export async function deleteWorkDir(workDir) {
-  await fs.promises.rm(workDir, { recursive: true }); // 删除工作目录
+  if (!workDir) return;
+  await fs.promises.rm(workDir, {
+    recursive: true,
+    force: true,
+    maxRetries: 3,
+  });
 }
