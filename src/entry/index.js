@@ -13,6 +13,7 @@ import { dirname } from 'node:path';
  * @returns {Promise<string>} 标准格式的 markdown 审计报告
  */
 export async function auditPackage(projectRoot, savePath) {
+  // 工作目录必须在 finally 中清理：任何一步失败（解析、install、audit、写报告）都不留垃圾
   const workDir = await createWorkDir();
   const isRemote = isRemoteProject(projectRoot);
 
@@ -58,13 +59,3 @@ export async function auditPackage(projectRoot, savePath) {
     await deleteWorkDir(workDir);
   }
 }
-
-(async () => {
-  try {
-    const report = await auditPackage('/home/plain/plain/form-builder', '/home/plain/plain/form-builder/audit-report.md');
-    console.log(report);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-})();
