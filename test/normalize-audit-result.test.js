@@ -5,15 +5,7 @@ import { buildLockGraph } from '../src/audit/lockGraph.js';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 
-const fixturePath = join(
-  import.meta.dirname,
-  '..',
-  'src',
-  'audit',
-  'test',
-  'workdir',
-  'audit.json'
-);
+const fixturePath = join(import.meta.dirname, 'fixtures', 'audit.json');
 
 async function loadNormalized() {
   const raw = JSON.parse(await readFile(fixturePath, 'utf8'));

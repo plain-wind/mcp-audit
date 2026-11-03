@@ -6,12 +6,8 @@ import { buildLockGraph } from '../src/audit/lockGraph.js';
 
 const fixtureLockPath = join(
   import.meta.dirname,
-  '..',
-  'src',
-  'audit',
-  'test',
-  'workdir',
-  'package-lock.json'
+  'fixtures',
+  'project-package-lock.json'
 );
 
 // 同名不同版本：x@3 挂在 a 下面，x@2 被提升到顶层供 z 使用
