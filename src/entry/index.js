@@ -13,8 +13,8 @@ import { dirname } from 'node:path';
  * @returns {Promise<string>} 标准格式的 markdown 审计报告
  */
 export async function auditPackage(projectRoot, savePath) {
-  // 工作目录必须在 finally 中清理：任何一步失败（解析、install、audit、写报告）都不留垃圾
   const workDir = await createWorkDir();
+  const isRemote = isRemoteProject(projectRoot);
 
   try {
     // 1. 解析项目，向工作目录添加 package.json
@@ -23,7 +23,7 @@ export async function auditPackage(projectRoot, savePath) {
     // 2. 准备 lockfile：本地工程优先复用已有的 lock，
     //    否则按 package.json 的 semver 范围重新解析（可能和实际安装版本不一致）
     let lock = await generateLock(workDir, packageJson, {
-      projectRoot: isRemoteProject(projectRoot) ? null : projectRoot,
+      projectRoot: isRemote ? null : projectRoot,
     });
 
     // 3. 审计；项目自带 lock 不可用时（版本过旧、workspaces 目录缺失等）回退到重新解析
@@ -45,7 +45,7 @@ export async function auditPackage(projectRoot, savePath) {
 
     // 4. 渲染审计结果
     const renderedResult = await render(auditResult, packageJson, {
-      projectRoot: isRemoteProject(projectRoot) ? null : projectRoot,
+      projectRoot: isRemote ? null : projectRoot,
     });
 
     // 5. 按需落盘，并把报告返回给调用方
@@ -58,3 +58,13 @@ export async function auditPackage(projectRoot, savePath) {
     await deleteWorkDir(workDir);
   }
 }
+
+(async () => {
+  try {
+    const report = await auditPackage('/home/plain/plain/form-builder', '/home/plain/plain/form-builder/audit-report.md');
+    console.log(report);
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
+})();

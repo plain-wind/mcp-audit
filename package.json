@@ -17,8 +17,8 @@
   },
   "scripts": {
     "start": "node src/mcpServer.js",
-    "test": "node --test 'test/**/*.test.js'",
-    "test:update-snapshots": "UPDATE_SNAPSHOTS=1 node --test 'test/**/*.test.js'"
+    "test": "node --test test/*.test.js",
+    "test:update-snapshots": "UPDATE_SNAPSHOTS=1 node --test test/*.test.js"
   },
   "keywords": [
     "mcp",
